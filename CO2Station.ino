@@ -35,7 +35,7 @@ DisplayState lcdState = Text;
 
 // Button
 const int captureButton = 4; 
-boolean captureState;
+boolean captureButtonState;
 
 // LEDs. 
 const int ledDisengaged = 3;
@@ -57,7 +57,7 @@ void setup() {
 
 void loop() {
   // Read the button state. 
-  captureState = digitalRead(captureButton); 
+  captureButtonState = digitalRead(captureButton); 
 
   // Define text state. 
   if (lcdState == Text) {
@@ -65,7 +65,7 @@ void loop() {
     updateCO2LCD(gasSensor.getCorrectedPPM(temperature, humidity));
 
     // Button is pressed. 
-    if (captureState == HIGH) {
+    if (captureButtonState == HIGH) {
        // Update LEDs.
       analogWrite(ledDisengaged, 0);
       analogWrite(ledEngaged, 255);
@@ -78,7 +78,7 @@ void loop() {
     }
 
     // Button is released. 
-    if (captureState == LOW) {
+    if (captureButtonState == LOW) {
        analogWrite(ledEngaged, 0);
        analogWrite(ledDisengaged, 255);
     }
@@ -90,14 +90,14 @@ void loop() {
     printBreathGraphOnLCD();
 
     // Button is pressed. 
-    if (captureState == HIGH) {
+    if (captureButtonState == HIGH) {
       // Update LEDS. 
       analogWrite(ledEngaged, 255);
       analogWrite(ledDisengaged, 0);
     }
 
     // Button is released. 
-    if (captureState == LOW) {
+    if (captureButtonState == LOW) {
       setInitialLCDDisplay();
 
       // Reset prevCo2Val
@@ -107,9 +107,12 @@ void loop() {
       lcdState = Text;
     }
   }
-  
-  // Debug LCD print. 
-  printCO2Debug();
+
+  // Debug MQ-135 sensor value.
+  //printCO2Debug();
+
+  // Send serial data from CO2 station. 
+  sendSerialData();
 }
 
 void setInitialLCDDisplay() {
@@ -146,17 +149,18 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 300);
-    lbg1.drawValue(diff, 300); 
+    lbg0.drawValue(diff, 200);
+    lbg1.drawValue(diff, 200); 
   }
-//
-//  Serial.print("Prev Value: ");
-//  Serial.print(prevCo2Val);
-//  Serial.print("\t New Val: ");  
-//  Serial.print(newCo2Val);
-//  Serial.print("\n");
-
+  
   delay (100);
+}
+
+void sendSerialData() {
+  Serial.print(captureButtonState);
+  Serial.print(",");
+  Serial.print((int)gasSensor.getCorrectedPPM(temperature, humidity));
+  Serial.print("\n");
 }
 
 void printCO2Debug() {
