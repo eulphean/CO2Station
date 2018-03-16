@@ -19,7 +19,7 @@ void Osc::update() {
 }
 
 void Osc::processOscMessage(ofxOscMessage m) {
-  if (m.getAddress() == "/co2/ouputs") {
+  if (m.getAddress() == "/co2/sensor") {
     int sensorVal = m.getArgAsInt(0);
     cout << sensorVal << endl;
     // Now, we can use this sensor value to do whatever munging we want to.

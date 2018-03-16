@@ -2,8 +2,8 @@
 
 void Osc::setup() {
   // Setup the sender for both the machines. 
-  senderProjection.setup(HOST1, PORTTOSEND1);
-  senderTree.setup(HOST2, PORTTOSEND2);
+  senderProjection.setup(PROJECTION, PORTTOSEND1);
+  senderTree.setup(TREE, PORTTOSEND2);
 }
 
 void Osc::sendOSCMessageProjection(ofxOscMessage &m) {
