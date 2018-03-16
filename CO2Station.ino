@@ -146,15 +146,15 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 100);
-    lbg1.drawValue(diff, 100); 
+    lbg0.drawValue(diff, 300);
+    lbg1.drawValue(diff, 300); 
   }
-
-  Serial.print("Prev Value: ");
-  Serial.print(prevCo2Val);
-  Serial.print("\t New Val: ");  
-  Serial.print(newCo2Val);
-  Serial.print("\n");
+//
+//  Serial.print("Prev Value: ");
+//  Serial.print(prevCo2Val);
+//  Serial.print("\t New Val: ");  
+//  Serial.print(newCo2Val);
+//  Serial.print("\n");
 
   delay (100);
 }
