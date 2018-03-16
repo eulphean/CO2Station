@@ -4,6 +4,12 @@
 // RZero value in the header file.
 #include "MQ135.h"
 #include "LiquidCrystal.h"
+#include "LcdBarGraph.h"
+
+enum DisplayState {
+  Text, // Regular display.
+  Graph // Button press, breath monitor.
+};
 
 // MQ135 sensor.  
 const int sensorInput = A2; 
@@ -12,10 +18,20 @@ float humidity = 25.0; // assume current humidity. Recommended to measure with D
 
 // Define the gas sensor. 
 MQ135 gasSensor = MQ135(sensorInput);
+float prevCo2Val = -1.0;
 
 // Initialize the LCD.
 LiquidCrystal lcd(7, 8, 9, 10, 11 , 12);
 boolean updateLCD = false;
+
+// Bar graph initiation. We will use 2 of them
+// to represent the amount of breath. 
+byte lcdNumCols = 16;
+LcdBarGraph lbg0(&lcd, lcdNumCols, 0, 0);
+LcdBarGraph lbg1(&lcd, lcdNumCols, 0, 1);
+
+// LCD Display default state.
+DisplayState lcdState = Text;
 
 // Button
 const int captureButton = 4; 
@@ -23,7 +39,7 @@ boolean captureState;
 
 // LEDs. 
 const int ledDisengaged = 3;
-const int ledEngaged = 5; 
+const int ledEngaged = 5;
 
 void setup() {
   Serial.begin(9600);
@@ -42,29 +58,63 @@ void setup() {
 void loop() {
   // Read the button state. 
   captureState = digitalRead(captureButton); 
+
+  // Define text state. 
+  if (lcdState == Text) {
+    // Update LCD with CO2 measurements. 
+    updateCO2LCD(gasSensor.getCorrectedPPM(temperature, humidity));
+
+    // Button is pressed. 
+    if (captureState == HIGH) {
+       // Update LEDs.
+      analogWrite(ledDisengaged, 0);
+      analogWrite(ledEngaged, 255);
+
+      // Clear the LCD.
+      lcd.clear();
+      
+      // Update state since button is pressed. 
+      lcdState = Graph;
+    }
+
+    // Button is released. 
+    if (captureState == LOW) {
+       analogWrite(ledEngaged, 0);
+       analogWrite(ledDisengaged, 255);
+    }
+  } 
+
+  // Define graph state. 
+  if (lcdState == Graph) {
+    // Print the graph on LCD.
+    printBreathGraphOnLCD();
+
+    // Button is pressed. 
+    if (captureState == HIGH) {
+      // Update LEDS. 
+      analogWrite(ledEngaged, 255);
+      analogWrite(ledDisengaged, 0);
+    }
+
+    // Button is released. 
+    if (captureState == LOW) {
+      setInitialLCDDisplay();
+
+      // Reset prevCo2Val
+      prevCo2Val = -1;
+      
+      // Update state.
+      lcdState = Text;
+    }
+  }
   
-  updateCO2LCD(getCO2ppm());
   // Debug LCD print. 
   printCO2Debug();
-
-  if (captureState == HIGH) {
-    // Update LEDs.
-    analogWrite(ledDisengaged, 0);
-    analogWrite(ledEngaged, 255);
-  } else {
-    // Update LEDs.
-    analogWrite(ledEngaged, 0);
-    analogWrite(ledDisengaged, 255);
-  }
-}
-
-float getCO2ppm() {
-  float ppm = gasSensor.getCorrectedPPM(temperature, humidity);
-  return ppm;
 }
 
 void setInitialLCDDisplay() {
   // 1st row, 1st column.
+  lcd.clear();
   lcd.setCursor(0, 0); 
   lcd.print("CO2: ");
   printLCDSecondRow();
@@ -77,9 +127,30 @@ void printLCDSecondRow() {
 }
 
 void updateCO2LCD(float val) {
+  // 1st row, 4th column.
   lcd.setCursor(4, 0);
   lcd.print((int)val);
   lcd.print("ppm");
+}
+
+void printBreathGraphOnLCD() {
+  float diff;
+  if (prevCo2Val == -1) {
+    prevCo2Val = gasSensor.getCorrectedPPM(temperature, humidity);
+  }
+
+  // Get new CO2Val and calculate the difference between the two.
+  float newCo2Val = gasSensor.getCorrectedPPM(temperature, humidity);
+  diff = newCo2Val - prevCo2Val;
+
+  // Draw the bar. 
+  lbg0.drawValue(diff, 5000);
+  lbg1.drawValue(diff, 5000);
+
+  // Update prevCo2Val with newCo2 val.
+  prevCo2Val = newCo2Val;
+
+  delay (100);
 }
 
 void printCO2Debug() {
