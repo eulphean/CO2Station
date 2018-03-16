@@ -33,8 +33,9 @@ void setup() {
   pinMode(captureButton, INPUT);
   pinMode(ledDisengaged, OUTPUT);
   pinMode(ledEngaged, OUTPUT);
-
-  // Initial display of the LCD. 
+ 
+  // Set LCD max bounds.
+  lcd.begin(16, 2);
   setInitialLCDDisplay();
 }
 
@@ -63,13 +64,20 @@ float getCO2ppm() {
 }
 
 void setInitialLCDDisplay() {
-  lcd.clear();
-  lcd.setCursor(0, 1); 
+  // 1st row, 1st column.
+  lcd.setCursor(0, 0); 
   lcd.print("CO2: ");
+  printLCDSecondRow();
+}
+
+void printLCDSecondRow() {
+  // 2nd row, 1st column.
+  lcd.setCursor(0, 1);
+  lcd.print("Push...Exhale");
 }
 
 void updateCO2LCD(float val) {
-  lcd.setCursor(4, 1);
+  lcd.setCursor(4, 0);
   lcd.print((int)val);
   lcd.print("ppm");
 }
