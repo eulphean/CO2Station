@@ -143,12 +143,18 @@ void printBreathGraphOnLCD() {
   float newCo2Val = gasSensor.getCorrectedPPM(temperature, humidity);
   diff = newCo2Val - prevCo2Val;
 
-  // Draw the bar. 
-  lbg0.drawValue(diff, 5000);
-  lbg1.drawValue(diff, 5000);
+  // Don't draw if diff is not > 0. We get weird characters on screen.
+  if (diff > 0) {
+    // Draw the bar. 
+    lbg0.drawValue(diff, 100);
+    lbg1.drawValue(diff, 100); 
+  }
 
-  // Update prevCo2Val with newCo2 val.
-  prevCo2Val = newCo2Val;
+  Serial.print("Prev Value: ");
+  Serial.print(prevCo2Val);
+  Serial.print("\t New Val: ");  
+  Serial.print(newCo2Val);
+  Serial.print("\n");
 
   delay (100);
 }
