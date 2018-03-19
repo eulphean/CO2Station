@@ -71,7 +71,7 @@ void loop() {
   fsrReading = analogRead(fsrPin);
   smoothFsr = correction * smoothFsr + (1 - correction) * fsrReading;
   //Serial.println(smoothFsr);
-  captureButtonState = (smoothFsr > 25);
+  captureButtonState = (smoothFsr > 80);
 
   // Define text state. 
   if (lcdState == Text) {
@@ -89,6 +89,12 @@ void loop() {
       
       // Update state since button is pressed. 
       lcdState = Graph;
+    }
+    
+    if (captureButtonState == LOW) {
+      // Update the LEDs.
+      analogWrite(ledEngaged, 0);
+      analogWrite(ledDisengaged, 255);
     }
   } 
 
