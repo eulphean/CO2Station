@@ -70,7 +70,8 @@ void loop() {
   // Read the FSR
   fsrReading = analogRead(fsrPin);
   smoothFsr = correction * smoothFsr + (1 - correction) * fsrReading;
-  captureButtonState = (smoothFsr > 100);
+  //Serial.println(smoothFsr);
+  captureButtonState = (smoothFsr > 25);
 
   // Define text state. 
   if (lcdState == Text) {
