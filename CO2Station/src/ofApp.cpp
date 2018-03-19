@@ -43,14 +43,11 @@ void ofApp::update(){
                 // Make OSC Message
                 ofxOscMessage m;
                 m.setAddress(string(SENDMESSAGE));
+                m.addIntArg(captureButtonState);
                 m.addIntArg(sensorVal);
-              
-                // Only send it to the tree machine if captureButtonState is true.
-                if (captureButtonState == 1) {
-                  oscHandler.sendOSCMessageTree(m);
-                }
-              
-                // Send every sensor val to projection machine.
+            
+                // Send capture button state and sensor val.
+                oscHandler.sendOSCMessageTree(m);
                 oscHandler.sendOSCMessageProjection(m);
             }
         
