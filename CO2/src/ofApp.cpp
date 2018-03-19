@@ -39,6 +39,13 @@ void ofApp::update(){
                 // Capacitive touch dish Left.
                 captureButtonState = ofToInt(tokens[0]);
                 sensorVal = ofToInt(tokens[1]);
+		
+		// Start recording data. 
+		if (captureButtonState == 1) {
+		   if (sensorVal > maxSensorVal) {
+			
+		   }	
+		}
               
                 // Make OSC Message
                 ofxOscMessage m;

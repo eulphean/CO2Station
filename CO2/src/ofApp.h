@@ -24,11 +24,10 @@ class ofApp : public ofBaseApp{
     // Arduino data.
     unsigned int captureButtonState;
     unsigned int sensorVal;
+    int maxSensorVal = -9999;
+    int minSensorVal = 9999;
   
     // OSC
     Osc oscHandler;
-  
-    // Ableton specific logic.
-    int currentScene;
      
 };
