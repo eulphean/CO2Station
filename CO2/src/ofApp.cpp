@@ -40,12 +40,21 @@ void ofApp::update(){
                 captureButtonState = ofToInt(tokens[0]);
                 sensorVal = ofToInt(tokens[1]);
 		
-		// Start recording data. 
-		if (captureButtonState == 1) {
-		   if (sensorVal > maxSensorVal) {
-			
-		   }	
-		}
+                // Start recording data. 
+//                if (captureButtonState == 1) {
+//                   // Keep track of the max sensor Val
+//                   if (sensorVal > maxSensorVal) {
+//                      sensorVal = maxSensorVal;
+//                   }
+//                  
+//                   if (sensorVal < minSensorVal) {
+//                      sensorVal = minSensorVal;
+//                   }
+//                }
+
+                // Then we can only send the difference but if I want to give the
+                // growth the character of the breath, then I need to receive all
+                // the data on processing side.
               
                 // Make OSC Message
                 ofxOscMessage m;
