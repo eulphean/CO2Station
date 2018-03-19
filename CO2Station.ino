@@ -16,7 +16,7 @@ enum DisplayState {
 int fsrPin = A0; 
 int fsrReading;
 float smoothFsr = 0;
-float correction = 0.75;
+float fsrCorrection = 0.75;
 
 // MQ135 sensor.  
 const int sensorInput = A2; 
@@ -26,6 +26,8 @@ float humidity = 25.0; // assume current humidity. Recommended to measure with D
 // Define the gas sensor. 
 MQ135 gasSensor = MQ135(sensorInput);
 float prevCo2Val = -1.0;
+float mq135Smoothed = 0; 
+float mq135Correction = 0.80;
 
 // Initialize the LCD.
 LiquidCrystal lcd(7, 8, 9, 10, 11 , 12);
@@ -69,14 +71,18 @@ void loop() {
 
   // Read the FSR
   fsrReading = analogRead(fsrPin);
-  smoothFsr = correction * smoothFsr + (1 - correction) * fsrReading;
+  smoothFsr = fsrCorrection * smoothFsr + (1 - fsrCorrection) * fsrReading;
   //Serial.println(smoothFsr);
   captureButtonState = (smoothFsr > 80);
 
-  // Define text state. 
+  // MQ135 correction val 
+  float mq135Val = gasSensor.getCorrectedPPM(temperature, humidity);
+  mq135Smoothed = mq135Correction * mq135Smoothed + (1 - mq135Correction) * mq135Val;
+
+  // Define Text state. 
   if (lcdState == Text) {
     // Update LCD with CO2 measurements. 
-    updateCO2LCD(gasSensor.getCorrectedPPM(temperature, humidity));
+    updateCO2LCD(mq135Smoothed);
 
     // Button is pressed. 
     if (captureButtonState == HIGH) {
@@ -98,7 +104,7 @@ void loop() {
     }
   } 
 
-  // Define graph state. 
+  // Define Graph state. 
   if (lcdState == Graph) {
     // Print the graph on LCD.
     printBreathGraphOnLCD();
@@ -132,13 +138,17 @@ void loop() {
     }
   }
 
+  // Warm up state.
   if (lcdState == WarmUp) {
     unsigned long endTime = millis();
+
+    // Capture button state will always be 0 till the warm up completes.
+    captureButtonState = 0;
     
-    updateCO2LCD(gasSensor.getCorrectedPPM(temperature, humidity));
+    updateCO2LCD(mq135Smoothed);
     
-    if (endTime - startTime > 10 * 1000) {
-      // 10 second warm up time. 
+    if (endTime - startTime > 20 * 1000) {
+      // 20 second warm up time. 
       lcdState = Text;
 
       // Update second row of LCD. 
@@ -147,10 +157,10 @@ void loop() {
   }
 
   // Debug MQ-135 sensor value.
-  //printCO2Debug();
+  printCO2Debug();
 
   // Send serial data from CO2 station. 
-  sendSerialData();
+  // sendSerialData();
 }
 
 void setInitialLCDDisplay() {
@@ -172,16 +182,17 @@ void updateCO2LCD(float val) {
   lcd.setCursor(4, 0);
   lcd.print((int)val);
   lcd.print("ppm");
+  delay (300);
 }
 
 void printBreathGraphOnLCD() {
   float diff;
   if (prevCo2Val == -1) {
-    prevCo2Val = gasSensor.getCorrectedPPM(temperature, humidity);
+    prevCo2Val = mq135Smoothed;
   }
 
   // Get new CO2Val and calculate the difference between the two.
-  float newCo2Val = gasSensor.getCorrectedPPM(temperature, humidity);
+  float newCo2Val = mq135Smoothed;
   diff = newCo2Val - prevCo2Val;
 
   // Don't draw if diff is not > 0. We get weird characters on screen.
@@ -190,14 +201,13 @@ void printBreathGraphOnLCD() {
     lbg0.drawValue(diff, 70);
     lbg1.drawValue(diff, 70); 
   }
-  
-  delay (300);
+  delay (100);
 }
 
 void sendSerialData() {
   Serial.print(captureButtonState);
   Serial.print(",");
-  Serial.print((int)gasSensor.getCorrectedPPM(temperature, humidity));
+  Serial.print((int) mq135Smoothed);
   Serial.print("\n");
 }
 
