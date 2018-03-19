@@ -73,7 +73,7 @@ void loop() {
   fsrReading = analogRead(fsrPin);
   smoothFsr = fsrCorrection * smoothFsr + (1 - fsrCorrection) * fsrReading;
   //Serial.println(smoothFsr);
-  captureButtonState = (smoothFsr > 80);
+  captureButtonState = (smoothFsr > 50);
 
   // MQ135 correction val 
   float mq135Val = gasSensor.getCorrectedPPM(temperature, humidity);
@@ -134,7 +134,7 @@ void loop() {
       startTime = millis();
 
       // Update second row of LCD. 
-      printLCDSecondRow("Warming up...");
+      printLCDSecondRow("Stabilizing...");
     }
   }
 
@@ -147,7 +147,7 @@ void loop() {
     
     updateCO2LCD(mq135Smoothed);
     
-    if (endTime - startTime > 20 * 1000) {
+    if (endTime - startTime > 30 * 1000) {
       // 20 second warm up time. 
       lcdState = Text;
 
@@ -157,10 +157,10 @@ void loop() {
   }
 
   // Debug MQ-135 sensor value.
-  printCO2Debug();
+  //printCO2Debug();
 
   // Send serial data from CO2 station. 
-  // sendSerialData();
+  sendSerialData();
 }
 
 void setInitialLCDDisplay() {
@@ -198,8 +198,8 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 70);
-    lbg1.drawValue(diff, 70); 
+    lbg0.drawValue(diff, 150);
+    lbg1.drawValue(diff, 150); 
   }
   delay (100);
 }
