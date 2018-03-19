@@ -5,7 +5,7 @@ void ofApp::setup() {
     ofBackground(0);
   
     // Arduino to talk to.
-    serial.setup("/dev/cu.usbmodem1411", 9600);
+    serial.setup("/dev/ttyACM0", 9600);
   
     // Setup Osc.
     oscHandler.setup();
