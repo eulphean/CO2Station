@@ -8,8 +8,15 @@
 
 enum DisplayState {
   Text, // Regular display.
-  Graph // Button press, breath monitor.
+  Graph, // Button press, breath monitor.
+  WarmUp
 };
+
+// FSR sensor. 
+int fsrPin = A0; 
+int fsrReading;
+float smoothFsr = 0;
+float correction = 0.75;
 
 // MQ135 sensor.  
 const int sensorInput = A2; 
@@ -32,9 +39,10 @@ LcdBarGraph lbg1(&lcd, lcdNumCols, 0, 1);
 
 // LCD Display default state.
 DisplayState lcdState = Text;
+unsigned long startTime;
 
 // Button
-const int captureButton = 4; 
+const int captureButton = 4;
 boolean captureButtonState;
 
 // LEDs. 
@@ -57,7 +65,12 @@ void setup() {
 
 void loop() {
   // Read the button state. 
-  captureButtonState = digitalRead(captureButton); 
+  //captureButtonState = digitalRead(captureButton);
+
+  // Read the FSR
+  fsrReading = analogRead(fsrPin);
+  smoothFsr = correction * smoothFsr + (1 - correction) * fsrReading;
+  captureButtonState = (smoothFsr > 100);
 
   // Define text state. 
   if (lcdState == Text) {
@@ -75,12 +88,6 @@ void loop() {
       
       // Update state since button is pressed. 
       lcdState = Graph;
-    }
-
-    // Button is released. 
-    if (captureButtonState == LOW) {
-       analogWrite(ledEngaged, 0);
-       analogWrite(ledDisengaged, 255);
     }
   } 
 
@@ -100,11 +107,35 @@ void loop() {
     if (captureButtonState == LOW) {
       setInitialLCDDisplay();
 
+      // Update the LEDs.
+      analogWrite(ledEngaged, 0);
+      analogWrite(ledDisengaged, 255);
+
       // Reset prevCo2Val
       prevCo2Val = -1;
-      
+
       // Update state.
+      lcdState = WarmUp;
+
+      // Reset startTime to current time to initiate warm up.
+      startTime = millis();
+
+      // Update second row of LCD. 
+      printLCDSecondRow("Warming up...");
+    }
+  }
+
+  if (lcdState == WarmUp) {
+    unsigned long endTime = millis();
+    
+    updateCO2LCD(gasSensor.getCorrectedPPM(temperature, humidity));
+    
+    if (endTime - startTime > 10 * 1000) {
+      // 10 second warm up time. 
       lcdState = Text;
+
+      // Update second row of LCD. 
+      printLCDSecondRow("Push...Exhale");
     }
   }
 
@@ -120,13 +151,13 @@ void setInitialLCDDisplay() {
   lcd.clear();
   lcd.setCursor(0, 0); 
   lcd.print("CO2: ");
-  printLCDSecondRow();
+  printLCDSecondRow("Push...Exhale");
 }
 
-void printLCDSecondRow() {
+void printLCDSecondRow(String text) {
   // 2nd row, 1st column.
   lcd.setCursor(0, 1);
-  lcd.print("Push...Exhale");
+  lcd.print(text);
 }
 
 void updateCO2LCD(float val) {
@@ -149,11 +180,11 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 200);
-    lbg1.drawValue(diff, 200); 
+    lbg0.drawValue(diff, 70);
+    lbg1.drawValue(diff, 70); 
   }
   
-  delay (100);
+  delay (300);
 }
 
 void sendSerialData() {
