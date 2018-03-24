@@ -72,7 +72,7 @@ void loop() {
   // Read the FSR
   fsrReading = analogRead(fsrPin);
   smoothFsr = fsrCorrection * smoothFsr + (1 - fsrCorrection) * fsrReading;
-  //Serial.println(smoothFsr);
+  Serial.println(smoothFsr);
   captureButtonState = (smoothFsr > 80);
 
   // MQ135 correction val 
@@ -157,10 +157,10 @@ void loop() {
   }
 
   // Debug MQ-135 sensor value.
-  //printCO2Debug();
+  printCO2Debug();
 
   // Send serial data from CO2 station. 
-  sendSerialData();
+  //sendSerialData();
 }
 
 void setInitialLCDDisplay() {
