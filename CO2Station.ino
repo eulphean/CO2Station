@@ -73,7 +73,7 @@ void loop() {
   fsrReading = analogRead(fsrPin);
   smoothFsr = fsrCorrection * smoothFsr + (1 - fsrCorrection) * fsrReading;
   //Serial.println(smoothFsr);
-  captureButtonState = (smoothFsr > 50);
+  captureButtonState = (smoothFsr > 80);
 
   // MQ135 correction val 
   float mq135Val = gasSensor.getCorrectedPPM(temperature, humidity);
