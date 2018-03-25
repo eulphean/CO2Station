@@ -5,6 +5,7 @@
 #include "MQ135.h"
 #include "LiquidCrystal.h"
 #include "LcdBarGraph.h"
+#include <dht.h>
 
 enum DisplayState {
   Text, // Regular display.
@@ -12,16 +13,15 @@ enum DisplayState {
   WarmUp
 };
 
-// FSR sensor. 
-int fsrPin = A0; 
-int fsrReading;
-float smoothFsr = 0;
-float fsrCorrection = 0.75;
-
 // MQ135 sensor.  
 const int sensorInput = A2; 
-float temperature = 21.0; // assume current temperature. Recommended to measure with DHT22
-float humidity = 25.0; // assume current humidity. Recommended to measure with DHT22
+
+// DHT11 sensor to record correct temperate and humidity. 
+// This will ensure we get accurate readings.
+const int DHT_PIN = 2; // Digital read pin.
+float temperature = 25; // assume current temperature. Recommended to measure with DHT22
+float humidity = 5; // assume current humidity. Recommended to measure with DHT22
+dht DHT;
 
 // Define the gas sensor. 
 MQ135 gasSensor = MQ135(sensorInput);
@@ -51,6 +51,9 @@ boolean captureButtonState;
 const int ledDisengaged = 3;
 const int ledEngaged = 5;
 
+// Stabilize time to spend in the WarmUp state. 
+const int stabilizeTime = 5; // seconds
+
 void setup() {
   Serial.begin(9600);
   
@@ -62,18 +65,18 @@ void setup() {
  
   // Set LCD max bounds.
   lcd.begin(16, 2);
-  setInitialLCDDisplay();
+  setInitialLCDDisplay(true);
+
+  // Initial delay to get the DHT sensor ready. 
+  delay(2000);
+
+  // Update temperate and humidity values. 
+  // readFromDht();
 }
 
 void loop() {
   // Read the button state. 
-  //captureButtonState = digitalRead(captureButton);
-
-  // Read the FSR
-  fsrReading = analogRead(fsrPin);
-  smoothFsr = fsrCorrection * smoothFsr + (1 - fsrCorrection) * fsrReading;
-  Serial.println(smoothFsr);
-  captureButtonState = (smoothFsr > 80);
+  captureButtonState = digitalRead(captureButton);
 
   // MQ135 correction val 
   float mq135Val = gasSensor.getCorrectedPPM(temperature, humidity);
@@ -118,7 +121,10 @@ void loop() {
 
     // Button is released. 
     if (captureButtonState == LOW) {
-      setInitialLCDDisplay();
+      setInitialLCDDisplay(false);
+      
+      // Update second row of LCD. 
+      printLCDSecondRow("Ready in ");
 
       // Update the LEDs.
       analogWrite(ledEngaged, 0);
@@ -132,9 +138,6 @@ void loop() {
 
       // Reset startTime to current time to initiate warm up.
       startTime = millis();
-
-      // Update second row of LCD. 
-      printLCDSecondRow("Stabilizing...");
     }
   }
 
@@ -144,12 +147,25 @@ void loop() {
 
     // Capture button state will always be 0 till the warm up completes.
     captureButtonState = 0;
-    
+
+    // Update CO2 levels. 
     updateCO2LCD(mq135Smoothed);
+
+    // Calculate elapsedTime in millis. 
+    float elapsedTimeInMillis = endTime - startTime;
     
-    if (endTime - startTime > 30 * 1000) {
-      // 20 second warm up time. 
+    // Update time in second row. 
+    updateTimeInSecondRow(elapsedTimeInMillis);
+    
+    if (elapsedTimeInMillis > stabilizeTime * 1000) {
+      // 9 second warm up time. 
       lcdState = Text;
+
+      // Read latest temperature and humidity values. 
+      //readFromDht();
+      
+      // Reset sensor by resetting Rzero.
+      float correctedRZero = gasSensor.getCorrectedRZero(temperature, humidity);
 
       // Update second row of LCD. 
       printLCDSecondRow("Push...Exhale");
@@ -157,18 +173,38 @@ void loop() {
   }
 
   // Debug MQ-135 sensor value.
-  printCO2Debug();
+  //printCO2Debug();
 
   // Send serial data from CO2 station. 
   //sendSerialData();
 }
 
-void setInitialLCDDisplay() {
+void readFromDht() {
+  int chk = DHT.read11(DHT_PIN);
+
+  temperature = DHT.temperature; 
+  humidity = DHT.humidity;
+  // DISPLAY DATA
+  Serial.print(DHT.humidity, 1);
+  Serial.print(",\t");
+  Serial.println(DHT.temperature, 1);
+}
+
+void updateTimeInSecondRow(int t) {
+  lcd.setCursor(9, 1);
+  lcd.print(stabilizeTime - t/1000);
+}
+
+void setInitialLCDDisplay(boolean printSecondLine) {
   // 1st row, 1st column.
   lcd.clear();
   lcd.setCursor(0, 0); 
   lcd.print("CO2: ");
-  printLCDSecondRow("Push...Exhale");
+
+  // Only print if this flag is enabled. 
+  if (printSecondLine) {
+    printLCDSecondRow("Push...Exhale");
+  }
 }
 
 void printLCDSecondRow(String text) {
@@ -230,4 +266,3 @@ void printCO2Debug() {
   Serial.print(correctedPPM);
   Serial.println("ppm");
 }
-
