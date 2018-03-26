@@ -2,10 +2,10 @@
 #include "ofMain.h"
 #include "ofxOsc.h"
 
-#define PROJECTION "10.73.38.86" // Update this IP address to the IP of the other MAC.
+#define PROJECTION "10.73.46.199" // Update this IP address to the IP of the other MAC.
 #define PORTTOSEND1 12345
 
-#define TREE "10.73.40.13" // Update this IP address to the IP of the other MAC.
+#define TREE "10.73.42.35" // Update this IP address to the IP of the other MAC.
 //#define TREE "10.73.38.177"
 #define PORTTOSEND2 12346
 
