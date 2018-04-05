@@ -65,7 +65,7 @@ void setup() {
  
   // Set LCD max bounds.
   lcd.begin(16, 2);
-  setInitialLCDDisplay(true);
+  setInitialLCDDisplay();
 
   // Initial delay to get the DHT sensor ready. 
   delay(2000);
@@ -85,7 +85,7 @@ void loop() {
   // Define Text state. 
   if (lcdState == Text) {
     // Update LCD with CO2 measurements. 
-    updateCO2LCD(mq135Smoothed);
+    // updateCO2LCD(mq135Smoothed);
 
     // Button is pressed. 
     if (captureButtonState == HIGH) {
@@ -121,7 +121,7 @@ void loop() {
 
     // Button is released. 
     if (captureButtonState == LOW) {
-      setInitialLCDDisplay(false);
+      setInitialLCDDisplay();
       
       // Update second row of LCD. 
       printLCDSecondRow("Ready in ");
@@ -149,7 +149,7 @@ void loop() {
     captureButtonState = 0;
 
     // Update CO2 levels. 
-    updateCO2LCD(mq135Smoothed);
+    //updateCO2LCD(mq135Smoothed);
 
     // Calculate elapsedTime in millis. 
     float elapsedTimeInMillis = endTime - startTime;
@@ -161,14 +161,8 @@ void loop() {
       // 9 second warm up time. 
       lcdState = Text;
 
-      // Read latest temperature and humidity values. 
-      //readFromDht();
-      
-      // Reset sensor by resetting Rzero.
-      float correctedRZero = gasSensor.getCorrectedRZero(temperature, humidity);
-
-      // Update second row of LCD. 
-      printLCDSecondRow("Push......Exhale");
+      // Reset LCD with initial data.  
+      setInitialLCDDisplay();
     }
   }
 
@@ -195,16 +189,11 @@ void updateTimeInSecondRow(int t) {
   lcd.print(stabilizeTime - t/1000);
 }
 
-void setInitialLCDDisplay(boolean printSecondLine) {
+void setInitialLCDDisplay() {
   // 1st row, 1st column.
   lcd.clear();
   lcd.setCursor(0, 0); 
-  lcd.print("CO2: ");
-
-  // Only print if this flag is enabled. 
-  if (printSecondLine) {
-    printLCDSecondRow("Push......Exhale");
-  }
+  lcd.print("Push......Exhale");
 }
 
 void printLCDSecondRow(String text) {
