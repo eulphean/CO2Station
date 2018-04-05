@@ -5,7 +5,7 @@
 #include "MQ135.h"
 #include "LiquidCrystal.h"
 #include "LcdBarGraph.h"
-#include <dht.h>
+//#include <dht.h>
 
 enum DisplayState {
   Text, // Regular display.
@@ -21,7 +21,7 @@ const int sensorInput = A2;
 const int DHT_PIN = 2; // Digital read pin.
 float temperature = 25; // assume current temperature. Recommended to measure with DHT22
 float humidity = 5; // assume current humidity. Recommended to measure with DHT22
-dht DHT;
+//dht DHT;
 
 // Define the gas sensor. 
 MQ135 gasSensor = MQ135(sensorInput);
@@ -168,27 +168,27 @@ void loop() {
       float correctedRZero = gasSensor.getCorrectedRZero(temperature, humidity);
 
       // Update second row of LCD. 
-      printLCDSecondRow("Push...Exhale");
+      printLCDSecondRow("Push......Exhale");
     }
   }
 
   // Debug MQ-135 sensor value.
-  //printCO2Debug();
+  // printDebug();
 
   // Send serial data from CO2 station. 
-  //sendSerialData();
+  sendSerialData();
 }
 
-void readFromDht() {
-  int chk = DHT.read11(DHT_PIN);
-
-  temperature = DHT.temperature; 
-  humidity = DHT.humidity;
-  // DISPLAY DATA
-  Serial.print(DHT.humidity, 1);
-  Serial.print(",\t");
-  Serial.println(DHT.temperature, 1);
-}
+//void readFromDht() {
+//  int chk = DHT.read11(DHT_PIN);
+//
+//  temperature = DHT.temperature; 
+//  humidity = DHT.humidity;
+//  // DISPLAY DATA
+//  Serial.print(DHT.humidity, 1);
+//  Serial.print(",\t");
+//  Serial.println(DHT.temperature, 1);
+//}
 
 void updateTimeInSecondRow(int t) {
   lcd.setCursor(9, 1);
@@ -203,7 +203,7 @@ void setInitialLCDDisplay(boolean printSecondLine) {
 
   // Only print if this flag is enabled. 
   if (printSecondLine) {
-    printLCDSecondRow("Push...Exhale");
+    printLCDSecondRow("Push......Exhale");
   }
 }
 
@@ -215,9 +215,19 @@ void printLCDSecondRow(String text) {
 
 void updateCO2LCD(float val) {
   // 1st row, 4th column.
-  lcd.setCursor(4, 0);
+  lcd.setCursor(4, 0); 
   lcd.print((int)val);
-  lcd.print("ppm");
+  
+  // Account for pending ppm labels
+  // sometimes. Fixing this bug.
+  if((int)val < 100) {
+    lcd.print("ppm  ");
+  } else if ((int)val <= 999) {
+    lcd.print("ppm "); 
+  } else if ((int)val > 999) {
+    lcd.print("ppm");
+  }
+
   delay (300);
 }
 
