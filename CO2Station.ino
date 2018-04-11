@@ -233,8 +233,8 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 150);
-    lbg1.drawValue(diff, 150); 
+    lbg0.drawValue(diff, 50);
+    lbg1.drawValue(diff, 50); 
   }
   delay (100);
 }
