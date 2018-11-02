@@ -65,7 +65,7 @@ void setup() {
  
   // Set LCD max bounds.
   lcd.begin(16, 2);
-  setInitialLCDDisplay(true);
+  setInitialLCDDisplay();
 
   // Initial delay to get the DHT sensor ready. 
   delay(2000);
@@ -84,9 +84,6 @@ void loop() {
 
   // Define Text state. 
   if (lcdState == Text) {
-    // Update LCD with CO2 measurements. 
-    // updateCO2LCD(mq135Smoothed);
-
     // Button is pressed. 
     if (captureButtonState == HIGH) {
        // Update LEDs.
@@ -121,7 +118,8 @@ void loop() {
 
     // Button is released. 
     if (captureButtonState == LOW) {
-      setInitialLCDDisplay(false);
+      lcd.clear();
+      printLCDFirstRow("Look back..");
       
       // Update second row of LCD. 
       printLCDSecondRow("Ready in ");
@@ -148,9 +146,6 @@ void loop() {
     // Capture button state will always be 0 till the warm up completes.
     captureButtonState = 0;
 
-    // Update CO2 levels. 
-    updateCO2LCD(mq135Smoothed);
-
     // Calculate elapsedTime in millis. 
     float elapsedTimeInMillis = endTime - startTime;
     
@@ -160,15 +155,11 @@ void loop() {
     if (elapsedTimeInMillis > stabilizeTime * 1000) {
       // 9 second warm up time. 
       lcdState = Text;
-
-      // Read latest temperature and humidity values. 
-      //readFromDht();
       
       // Reset sensor by resetting Rzero.
       float correctedRZero = gasSensor.getCorrectedRZero(temperature, humidity);
-
-      // Update second row of LCD. 
-      printLCDSecondRow("Push...Exhale");
+      
+      setInitialLCDDisplay();
     }
   }
 
@@ -195,16 +186,10 @@ void updateTimeInSecondRow(int t) {
   lcd.print(stabilizeTime - t/1000);
 }
 
-void setInitialLCDDisplay(boolean printSecondLine) {
-  // 1st row, 1st column.
+void setInitialLCDDisplay() {
   lcd.clear();
-  lcd.setCursor(0, 0); 
-  lcd.print("CO2: ");
-
-  // Only print if this flag is enabled. 
-  if (printSecondLine) {
-    printLCDSecondRow("Push...Exhale");
-  }
+  printLCDFirstRow("Press...Exhale..");
+  printLCDSecondRow("Into this hole->");
 }
 
 void printLCDSecondRow(String text) {
@@ -213,12 +198,9 @@ void printLCDSecondRow(String text) {
   lcd.print(text);
 }
 
-void updateCO2LCD(float val) {
-  // 1st row, 4th column.
-  lcd.setCursor(4, 0);
-  lcd.print((int)val);
-  lcd.print("ppm");
-  delay (300);
+void printLCDFirstRow(String text) {
+  lcd.setCursor(0, 0); 
+  lcd.print(text);
 }
 
 void printBreathGraphOnLCD() {
@@ -234,8 +216,8 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 100);
-    lbg1.drawValue(diff, 100); 
+    lbg0.drawValue(diff, 80);
+    lbg1.drawValue(diff, 80); 
   }
   delay (100);
 }
