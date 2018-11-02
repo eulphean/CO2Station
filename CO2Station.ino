@@ -85,7 +85,7 @@ void loop() {
   // Define Text state. 
   if (lcdState == Text) {
     // Update LCD with CO2 measurements. 
-    updateCO2LCD(mq135Smoothed);
+    // updateCO2LCD(mq135Smoothed);
 
     // Button is pressed. 
     if (captureButtonState == HIGH) {
@@ -172,11 +172,11 @@ void loop() {
     }
   }
 
-  // Debug MQ-135 sensor value.
+  //Debug MQ-135 sensor value.
   //printCO2Debug();
 
   // Send serial data from CO2 station. 
-  //sendSerialData();
+  sendSerialData();
 }
 
 void readFromDht() {
@@ -234,8 +234,8 @@ void printBreathGraphOnLCD() {
   // Don't draw if diff is not > 0. We get weird characters on screen.
   if (diff > 0) {
     // Draw the bar. 
-    lbg0.drawValue(diff, 150);
-    lbg1.drawValue(diff, 150); 
+    lbg0.drawValue(diff, 100);
+    lbg1.drawValue(diff, 100); 
   }
   delay (100);
 }

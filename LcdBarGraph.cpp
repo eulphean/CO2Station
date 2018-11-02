@@ -162,3 +162,4 @@ void LcdBarGraph::drawValue(int value, int maxValue) {
     _lcd->write(']');
     */
 }
+

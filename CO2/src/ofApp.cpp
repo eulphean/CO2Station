@@ -5,7 +5,7 @@ void ofApp::setup() {
     ofBackground(0);
   
     // Arduino to talk to.
-    serial.setup("/dev/ttyACM3", 9600);
+    serial.setup("/dev/cu.usbmodem1411", 9600);
   
     // Setup Osc.
     oscHandler.setup();
@@ -39,22 +39,6 @@ void ofApp::update(){
                 // Capacitive touch dish Left.
                 captureButtonState = ofToInt(tokens[0]);
                 sensorVal = ofToInt(tokens[1]);
-		
-                // Start recording data. 
-//                if (captureButtonState == 1) {
-//                   // Keep track of the max sensor Val
-//                   if (sensorVal > maxSensorVal) {
-//                      sensorVal = maxSensorVal;
-//                   }
-//                  
-//                   if (sensorVal < minSensorVal) {
-//                      sensorVal = minSensorVal;
-//                   }
-//                }
-
-                // Then we can only send the difference but if I want to give the
-                // growth the character of the breath, then I need to receive all
-                // the data on processing side.
               
                 // Make OSC Message
                 ofxOscMessage m;

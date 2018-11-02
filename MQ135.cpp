@@ -130,3 +130,4 @@ float MQ135::getCorrectedRZero(float t, float h) {
   return getCorrectedResistance(t, h) * pow((ATMOCO2/PARA), (1./PARB));
 }
 
+
