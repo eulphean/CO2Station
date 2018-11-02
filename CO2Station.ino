@@ -5,7 +5,7 @@
 #include "MQ135.h"
 #include "LiquidCrystal.h"
 #include "LcdBarGraph.h"
-#include <dht.h>
+//#include <dht.h>
 
 enum DisplayState {
   Text, // Regular display.
@@ -21,7 +21,7 @@ const int sensorInput = A2;
 const int DHT_PIN = 2; // Digital read pin.
 float temperature = 25; // assume current temperature. Recommended to measure with DHT22
 float humidity = 5; // assume current humidity. Recommended to measure with DHT22
-dht DHT;
+//dht DHT;
 
 // Define the gas sensor. 
 MQ135 gasSensor = MQ135(sensorInput);
@@ -119,7 +119,7 @@ void loop() {
     // Button is released. 
     if (captureButtonState == LOW) {
       lcd.clear();
-      printLCDFirstRow("Look back..");
+      printLCDFirstRow("Look back...");
       
       // Update second row of LCD. 
       printLCDSecondRow("Ready in ");
@@ -158,7 +158,6 @@ void loop() {
       
       // Reset sensor by resetting Rzero.
       float correctedRZero = gasSensor.getCorrectedRZero(temperature, humidity);
-      
       setInitialLCDDisplay();
     }
   }
@@ -170,26 +169,14 @@ void loop() {
   sendSerialData();
 }
 
-void readFromDht() {
-  int chk = DHT.read11(DHT_PIN);
-
-  temperature = DHT.temperature; 
-  humidity = DHT.humidity;
-  // DISPLAY DATA
-  Serial.print(DHT.humidity, 1);
-  Serial.print(",\t");
-  Serial.println(DHT.temperature, 1);
-}
-
 void updateTimeInSecondRow(int t) {
   lcd.setCursor(9, 1);
   lcd.print(stabilizeTime - t/1000);
 }
 
 void setInitialLCDDisplay() {
-  lcd.clear();
-  printLCDFirstRow("Press...Exhale..");
-  printLCDSecondRow("Into this hole->");
+  printLCDFirstRow("Press...Exhale  ");
+  printLCDSecondRow("In this hole -->");
 }
 
 void printLCDSecondRow(String text) {
@@ -201,6 +188,23 @@ void printLCDSecondRow(String text) {
 void printLCDFirstRow(String text) {
   lcd.setCursor(0, 0); 
   lcd.print(text);
+}
+
+void updateCO2LCD(float val) {
+  // 1st row, 4th column.
+  lcd.setCursor(4, 0); 
+  lcd.print((int)val);
+  
+  // Account for pending ppm labels
+  // sometimes. Fixing this bug.
+  if((int)val < 100) {
+    lcd.print("ppm  ");
+  } else if ((int)val <= 999) {
+    lcd.print("ppm "); 
+  } else if ((int)val > 999) {
+    lcd.print("ppm");
+  }
+  delay (300);
 }
 
 void printBreathGraphOnLCD() {
